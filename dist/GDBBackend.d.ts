@@ -1,7 +1,19 @@
 /// <reference types="node" />
+/*********************************************************************
+ * Copyright (c) 2018 QNX Software Systems and others
+ *
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *********************************************************************/
+import { ChildProcess } from 'child_process';
 import * as events from 'events';
+import { Writable } from 'stream';
 import { AttachRequestArguments, LaunchRequestArguments } from './GDBDebugSession';
 import { MIResponse } from './mi';
+import { MIParser } from './MIParser';
 export interface MIExecNextRequest {
     reverse?: boolean;
 }
@@ -17,10 +29,10 @@ export declare interface GDBBackend {
     emit(event: 'execAsync' | 'notifyAsync', asyncClass: string, data: any): boolean;
 }
 export declare class GDBBackend extends events.EventEmitter {
-    private parser;
-    private out?;
-    private token;
-    private proc?;
+    protected parser: MIParser;
+    protected out?: Writable;
+    protected token: number;
+    protected proc?: ChildProcess;
     spawn(requestArgs: LaunchRequestArguments | AttachRequestArguments): Promise<void>;
     spawnInClientTerminal(requestArgs: LaunchRequestArguments | AttachRequestArguments, cb: (args: string[]) => Promise<void>): Promise<void>;
     pause(): boolean;
@@ -31,5 +43,5 @@ export declare class GDBBackend extends events.EventEmitter {
     sendGDBSet(params: string): Promise<{}>;
     sendGDBShow(params: string): Promise<MIGDBShowResponse>;
     sendGDBExit(): Promise<{}>;
-    private nextToken;
+    protected nextToken(): number;
 }

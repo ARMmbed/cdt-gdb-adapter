@@ -1,7 +1,8 @@
-import { Logger, LoggingDebugSession, Response, Thread } from 'vscode-debugadapter';
+import { Handles, Logger, LoggingDebugSession, Response, Thread } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { GDBBackend } from './GDBBackend';
 import * as mi from './mi';
+import * as varMgr from './varManager';
 export interface RequestArguments extends DebugProtocol.LaunchRequestArguments {
     gdb?: string;
     gdbArguments?: string[];
@@ -53,10 +54,10 @@ export declare class GDBDebugSession extends LoggingDebugSession {
     protected supportsRunInTerminalRequest: boolean;
     protected supportsGdbConsole: boolean;
     protected logger: Logger.Logger;
-    private frameHandles;
-    private variableHandles;
-    private threads;
-    private waitPaused?;
+    protected frameHandles: Handles<FrameReference>;
+    protected variableHandles: Handles<VariableReference>;
+    protected threads: Thread[];
+    protected waitPaused?: (value?: void | PromiseLike<void>) => void;
     constructor();
     protected createBackend(): GDBBackend;
     /**
@@ -91,8 +92,8 @@ export declare class GDBDebugSession extends LoggingDebugSession {
     protected handleGDBStopped(result: any): void;
     protected handleGDBAsync(resultClass: string, resultData: any): void;
     protected handleGDBNotify(notifyClass: string, notifyData: any): void;
-    private handleVariableRequestFrame;
-    private handleVariableRequestObject;
-    private getAddr;
-    private isChildOfClass;
+    protected handleVariableRequestFrame(ref: FrameVariableReference): Promise<DebugProtocol.Variable[]>;
+    protected handleVariableRequestObject(ref: ObjectVariableReference): Promise<DebugProtocol.Variable[]>;
+    protected getAddr(varobj: varMgr.VarObjType): Promise<string>;
+    protected isChildOfClass(child: mi.MIVarChild): boolean;
 }
