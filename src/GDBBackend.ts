@@ -28,10 +28,10 @@ export interface MIGDBShowResponse extends MIResponse {
 
 export declare interface GDBBackend {
     on(event: 'consoleStreamOutput', listener: (output: string, category: string) => void): this;
-    on(event: 'execAsync' | 'notifyAsync', listener: (asyncClass: string, data: any) => void): this;
+    on(event: 'execAsync' | 'notifyAsync' | 'statusAsync', listener: (asyncClass: string, data: any) => void): this;
 
     emit(event: 'consoleStreamOutput', output: string, category: string): boolean;
-    emit(event: 'execAsync' | 'notifyAsync', asyncClass: string, data: any): boolean;
+    emit(event: 'execAsync' | 'notifyAsync' | 'statusAsync', asyncClass: string, data: any): boolean;
 }
 
 export class GDBBackend extends events.EventEmitter {
@@ -89,6 +89,14 @@ export class GDBBackend extends events.EventEmitter {
         });
     }
 
+    public async sendCommands(commands?: string[]) {
+        if (commands) {
+            for (const command of commands) {
+                await this.sendCommand(command);
+            }
+        }
+    }
+
     public sendCommand<T>(command: string): Promise<T> {
         const token = this.nextToken();
         logger.verbose(`GDB command: ${token} ${command}`);
@@ -120,8 +128,35 @@ export class GDBBackend extends events.EventEmitter {
         return this.sendCommand('-enable-pretty-printing');
     }
 
+    // Rewrite the argument escaping whitespace, quotes and backslash
+    public standardEscape(arg: string): string {
+        let result = '';
+        for (const char of arg) {
+            if (char === '\\' || char === '"') {
+                result += '\\';
+            }
+            result += char;
+        }
+        if (/\s/.test(arg)) {
+            result = `"${result}"`;
+        }
+        return result;
+    }
+
     public sendFileExecAndSymbols(program: string) {
-        return this.sendCommand(`-file-exec-and-symbols ${program}`);
+        return this.sendCommand(`-file-exec-and-symbols ${this.standardEscape(program)}`);
+    }
+
+    public sendFileSymbolFile(symbols: string) {
+        return this.sendCommand(`-file-symbol-file ${this.standardEscape(symbols)}`);
+    }
+
+    public sendAddSymbolFile(symbols: string, offset: string) {
+        return this.sendCommand(`add-symbol-file ${this.standardEscape(symbols)} ${offset}`);
+    }
+
+    public sendLoad(imageFileName: string, imageOffset: string | undefined) {
+        return this.sendCommand(`load ${this.standardEscape(imageFileName)} ${imageOffset || ''}`);
     }
 
     public sendGDBSet(params: string) {

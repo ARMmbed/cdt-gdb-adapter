@@ -12,44 +12,42 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { CdtDebugClient } from './debugClient';
 import {
-    expectRejection, gdbPath, getScopes, openGdbConsole, Scope, standardBefore, standardBeforeEach, testProgramsDir,
+    expectRejection, gdbPath, getScopes, openGdbConsole, Scope, standardBeforeEach, testProgramsDir,
 } from './utils';
 
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
 
-let dc: CdtDebugClient;
-let scope: Scope;
-
-const evaluateProgram = path.join(testProgramsDir, 'evaluate');
-const evaluateSrc = path.join(testProgramsDir, 'evaluate.cpp');
-
-before(standardBefore);
-
-beforeEach(async function() {
-    // Move the timeout out of the way if the adapter is going to be debugged.
-    if (process.env.INSPECT_DEBUG_ADAPTER) {
-        this.timeout(9999999);
-    }
-    dc = await standardBeforeEach();
-    await dc.hitBreakpoint({
-        verbose: true,
-        gdb: gdbPath,
-        program: evaluateProgram,
-        logFile: '/tmp/gdb.log',
-        openGdbConsole,
-    }, {
-        path: evaluateSrc,
-        line: 2,
-    });
-    scope = await getScopes(dc);
-});
-
-afterEach(async function() {
-    await dc.stop();
-});
-
 describe('evaluate request', function() {
+    let dc: CdtDebugClient;
+    let scope: Scope;
+
+    const evaluateProgram = path.join(testProgramsDir, 'evaluate');
+    const evaluateSrc = path.join(testProgramsDir, 'evaluate.cpp');
+
+    beforeEach(async function() {
+        // Move the timeout out of the way if the adapter is going to be debugged.
+        if (process.env.INSPECT_DEBUG_ADAPTER) {
+            this.timeout(9999999);
+        }
+        dc = await standardBeforeEach();
+        await dc.hitBreakpoint({
+            verbose: true,
+            gdb: gdbPath,
+            program: evaluateProgram,
+            logFile: '/tmp/gdb.log',
+            openGdbConsole,
+        }, {
+                path: evaluateSrc,
+                line: 2,
+            });
+        scope = await getScopes(dc);
+    });
+
+    afterEach(async function() {
+        await dc.stop();
+    });
+
     // Move the timeout out of the way if the adapter is going to be debugged.
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         this.timeout(9999999);

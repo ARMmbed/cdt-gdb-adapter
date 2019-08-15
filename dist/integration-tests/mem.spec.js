@@ -22,47 +22,58 @@ const path = require("path");
 const utils_1 = require("./utils");
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
-let dc;
-let frame;
-const memProgram = path.join(utils_1.testProgramsDir, 'mem');
-const memSrc = path.join(utils_1.testProgramsDir, 'mem.c');
-before(utils_1.standardBefore);
-beforeEach(function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        dc = yield utils_1.standardBeforeEach();
-        yield dc.hitBreakpoint({
-            gdb: utils_1.gdbPath,
-            program: memProgram,
-            openGdbConsole: utils_1.openGdbConsole,
-        }, {
-            path: memSrc,
-            line: 12,
-        });
-        const threads = yield dc.threadsRequest();
-        chai_1.expect(threads.body.threads.length).to.equal(1);
-        const stack = yield dc.stackTraceRequest({ threadId: threads.body.threads[0].id });
-        chai_1.expect(stack.body.stackFrames.length).to.equal(1);
-        frame = stack.body.stackFrames[0];
-    });
-});
-afterEach(function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield dc.stop();
-    });
-});
-/**
- * Verify that `resp` contains the bytes `expectedBytes` and the
- * `expectedAddress` start address.
- *
- * `expectedAddress` should be an hexadecimal string, with the leading 0x.
- */
-function verifyMemoryReadResult(resp, expectedBytes, expectedAddress) {
-    chai_1.expect(resp.body.data).eq(expectedBytes);
-    chai_1.expect(resp.body.address).match(/^0x[0-9a-fA-F]+$/);
-    const actualAddress = parseInt(resp.body.address, 16);
-    chai_1.expect(actualAddress).eq(expectedAddress);
-}
 describe('Memory Test Suite', function () {
+    let dc;
+    let frame;
+    const memProgram = path.join(utils_1.testProgramsDir, 'mem');
+    const memSrc = path.join(utils_1.testProgramsDir, 'mem.c');
+    beforeEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            dc = yield utils_1.standardBeforeEach();
+            yield dc.hitBreakpoint({
+                gdb: utils_1.gdbPath,
+                program: memProgram,
+                openGdbConsole: utils_1.openGdbConsole,
+            }, {
+                path: memSrc,
+                line: 12,
+            });
+            const threads = yield dc.threadsRequest();
+            // On windows additional threads can exist to handle signals, therefore find
+            // the real thread & frame running the user code. The other thread will
+            // normally be running code from ntdll or similar.
+            loop_threads: for (const thread of threads.body.threads) {
+                const stack = yield dc.stackTraceRequest({ threadId: thread.id });
+                if (stack.body.stackFrames.length >= 1) {
+                    for (const f of stack.body.stackFrames) {
+                        if (f.source && f.source.name === 'mem.c') {
+                            frame = f;
+                            break loop_threads;
+                        }
+                    }
+                }
+            }
+            // Make sure we found the expected frame
+            chai_1.expect(frame).not.eq(undefined);
+        });
+    });
+    afterEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield dc.stop();
+        });
+    });
+    /**
+     * Verify that `resp` contains the bytes `expectedBytes` and the
+     * `expectedAddress` start address.
+     *
+     * `expectedAddress` should be an hexadecimal string, with the leading 0x.
+     */
+    function verifyMemoryReadResult(resp, expectedBytes, expectedAddress) {
+        chai_1.expect(resp.body.data).eq(expectedBytes);
+        chai_1.expect(resp.body.address).match(/^0x[0-9a-fA-F]+$/);
+        const actualAddress = parseInt(resp.body.address, 16);
+        chai_1.expect(actualAddress).eq(expectedAddress);
+    }
     // Test reading memory using cdt-gdb-adapter's extension request.
     it('can read memory', function () {
         return __awaiter(this, void 0, void 0, function* () {

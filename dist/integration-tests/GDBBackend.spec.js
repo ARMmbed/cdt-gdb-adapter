@@ -19,18 +19,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const chai_1 = require("chai");
 const __1 = require("..");
-let gdb;
-beforeEach(function () {
-    gdb = new __1.GDBBackend();
-    const args = {
-        program: 'foo',
-    };
-    gdb.spawn(args);
-});
-afterEach(function () {
-    gdb.sendGDBExit();
-});
 describe('GDB Backend Test Suite', function () {
+    let gdb;
+    beforeEach(function () {
+        gdb = new __1.GDBBackend();
+        const args = {
+            program: 'foo',
+        };
+        gdb.spawn(args);
+    });
+    afterEach(function () {
+        gdb.sendGDBExit();
+    });
     // Move the timeout out of the way if the adapter is going to be debugged.
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         this.timeout(9999999);

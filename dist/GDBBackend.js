@@ -76,6 +76,15 @@ class GDBBackend extends events.EventEmitter {
             });
         });
     }
+    sendCommands(commands) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (commands) {
+                for (const command of commands) {
+                    yield this.sendCommand(command);
+                }
+            }
+        });
+    }
     sendCommand(command) {
         const token = this.nextToken();
         logger_1.logger.verbose(`GDB command: ${token} ${command}`);
@@ -106,8 +115,31 @@ class GDBBackend extends events.EventEmitter {
     sendEnablePrettyPrint() {
         return this.sendCommand('-enable-pretty-printing');
     }
+    // Rewrite the argument escaping whitespace, quotes and backslash
+    standardEscape(arg) {
+        let result = '';
+        for (const char of arg) {
+            if (char === '\\' || char === '"') {
+                result += '\\';
+            }
+            result += char;
+        }
+        if (/\s/.test(arg)) {
+            result = `"${result}"`;
+        }
+        return result;
+    }
     sendFileExecAndSymbols(program) {
-        return this.sendCommand(`-file-exec-and-symbols ${program}`);
+        return this.sendCommand(`-file-exec-and-symbols ${this.standardEscape(program)}`);
+    }
+    sendFileSymbolFile(symbols) {
+        return this.sendCommand(`-file-symbol-file ${this.standardEscape(symbols)}`);
+    }
+    sendAddSymbolFile(symbols, offset) {
+        return this.sendCommand(`add-symbol-file ${this.standardEscape(symbols)} ${offset}`);
+    }
+    sendLoad(imageFileName, imageOffset) {
+        return this.sendCommand(`load ${this.standardEscape(imageFileName)} ${imageOffset || ''}`);
     }
     sendGDBSet(params) {
         return this.sendCommand(`-gdb-set ${params}`);

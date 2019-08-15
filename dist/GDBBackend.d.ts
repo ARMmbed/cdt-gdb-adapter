@@ -24,9 +24,9 @@ export interface MIGDBShowResponse extends MIResponse {
 }
 export declare interface GDBBackend {
     on(event: 'consoleStreamOutput', listener: (output: string, category: string) => void): this;
-    on(event: 'execAsync' | 'notifyAsync', listener: (asyncClass: string, data: any) => void): this;
+    on(event: 'execAsync' | 'notifyAsync' | 'statusAsync', listener: (asyncClass: string, data: any) => void): this;
     emit(event: 'consoleStreamOutput', output: string, category: string): boolean;
-    emit(event: 'execAsync' | 'notifyAsync', asyncClass: string, data: any): boolean;
+    emit(event: 'execAsync' | 'notifyAsync' | 'statusAsync', asyncClass: string, data: any): boolean;
 }
 export declare class GDBBackend extends events.EventEmitter {
     protected parser: MIParser;
@@ -37,9 +37,14 @@ export declare class GDBBackend extends events.EventEmitter {
     spawnInClientTerminal(requestArgs: LaunchRequestArguments | AttachRequestArguments, cb: (args: string[]) => Promise<void>): Promise<void>;
     pause(): boolean;
     supportsNewUi(gdbPath?: string): Promise<boolean>;
+    sendCommands(commands?: string[]): Promise<void>;
     sendCommand<T>(command: string): Promise<T>;
     sendEnablePrettyPrint(): Promise<{}>;
+    standardEscape(arg: string): string;
     sendFileExecAndSymbols(program: string): Promise<{}>;
+    sendFileSymbolFile(symbols: string): Promise<{}>;
+    sendAddSymbolFile(symbols: string, offset: string): Promise<{}>;
+    sendLoad(imageFileName: string, imageOffset: string | undefined): Promise<{}>;
     sendGDBSet(params: string): Promise<{}>;
     sendGDBShow(params: string): Promise<MIGDBShowResponse>;
     sendGDBExit(): Promise<{}>;

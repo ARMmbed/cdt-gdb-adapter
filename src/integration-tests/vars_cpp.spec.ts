@@ -13,50 +13,49 @@ import * as path from 'path';
 import { LaunchRequestArguments } from '..';
 import { CdtDebugClient } from './debugClient';
 import {
-    compareVariable, gdbPath, getScopes, openGdbConsole, resolveLineTagLocations, Scope, standardBefore,
+    compareVariable, gdbPath, getScopes, openGdbConsole, resolveLineTagLocations, Scope,
     standardBeforeEach, testProgramsDir, verifyVariable,
 } from './utils';
 
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
 
-let dc: CdtDebugClient;
-let scope: Scope;
-
-const varsCppProgram = path.join(testProgramsDir, 'vars_cpp');
-const varsCppSrc = path.join(testProgramsDir, 'vars_cpp.cpp');
-
-const lineTags = {
-    'STOP HERE': 0,
-};
-
-before(function() {
-    standardBefore();
-
-    resolveLineTagLocations(varsCppSrc, lineTags);
-});
-
-beforeEach(async function() {
-    dc = await standardBeforeEach();
-
-    await dc.hitBreakpoint({
-        verbose: true,
-        gdb: gdbPath,
-        program: varsCppProgram,
-        openGdbConsole,
-    } as LaunchRequestArguments, {
-            path: varsCppSrc,
-            line: lineTags['STOP HERE'],
-        });
-    scope = await getScopes(dc);
-    expect(scope.scopes.body.scopes.length, 'Unexpected number of scopes returned').to.equal(1);
-});
-
-afterEach(async function() {
-    await dc.stop();
-});
-
 describe('Variables CPP Test Suite', function() {
+
+    let dc: CdtDebugClient;
+    let scope: Scope;
+
+    const varsCppProgram = path.join(testProgramsDir, 'vars_cpp');
+    const varsCppSrc = path.join(testProgramsDir, 'vars_cpp.cpp');
+
+    const lineTags = {
+        'STOP HERE': 0,
+    };
+
+    before(function() {
+        resolveLineTagLocations(varsCppSrc, lineTags);
+    });
+
+    beforeEach(async function() {
+        dc = await standardBeforeEach();
+
+        await dc.hitBreakpoint({
+            verbose: true,
+            gdb: gdbPath,
+            program: varsCppProgram,
+            openGdbConsole,
+        } as LaunchRequestArguments, {
+                path: varsCppSrc,
+                line: lineTags['STOP HERE'],
+            });
+        scope = await getScopes(dc);
+        expect(scope.scopes.body.scopes.length, 'Unexpected number of scopes returned').to.equal(1);
+    });
+
+    afterEach(async function() {
+        await dc.stop();
+    });
+
     // Move the timeout out of the way if the adapter is going to be debugged.
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         this.timeout(9999999);

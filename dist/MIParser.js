@@ -229,6 +229,11 @@ class MIParser {
                 const execClass = this.handleString();
                 this.gdb.emit('execAsync', execClass, this.handleAsyncData());
                 break;
+            case '+':
+                logger_1.logger.verbose('GDB status async: ' + this.restOfLine());
+                const statusClass = this.handleString();
+                this.gdb.emit('statusAsync', statusClass, this.handleAsyncData());
+                break;
             case '(':
                 if (this.waitReady) {
                     this.waitReady();

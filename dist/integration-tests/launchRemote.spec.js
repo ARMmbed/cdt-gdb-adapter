@@ -1,6 +1,6 @@
 "use strict";
 /*********************************************************************
- * Copyright (c) 2018 Ericsson and others
+ * Copyright (c) 2019 Kichwa Coders and others
  *
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
@@ -17,21 +17,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const chai_1 = require("chai");
 const path = require("path");
 const utils_1 = require("./utils");
 const utils_2 = require("./utils");
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
-describe('launch', function () {
+describe('launch remote', function () {
     let dc;
     const emptyProgram = path.join(utils_1.testProgramsDir, 'empty');
-    const emptySpaceProgram = path.join(utils_1.testProgramsDir, 'empty space');
     const emptySrc = path.join(utils_1.testProgramsDir, 'empty.c');
-    const emptySpaceSrc = path.join(utils_1.testProgramsDir, 'empty space.c');
     beforeEach(function () {
         return __awaiter(this, void 0, void 0, function* () {
-            dc = yield utils_1.standardBeforeEach();
+            dc = yield utils_1.standardBeforeEach('debugTargetAdapter.js');
         });
     });
     afterEach(function () {
@@ -43,50 +40,21 @@ describe('launch', function () {
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         this.timeout(9999999);
     }
-    it('can launch and hit a breakpoint', function () {
+    it('can launch remote and hit a breakpoint', function () {
         return __awaiter(this, void 0, void 0, function* () {
             yield dc.hitBreakpoint({
                 verbose: true,
                 gdb: utils_2.gdbPath,
                 program: emptyProgram,
                 openGdbConsole: utils_2.openGdbConsole,
+                target: {
+                    type: 'remote',
+                },
             }, {
                 path: emptySrc,
                 line: 3,
             });
         });
     });
-    it('reports an error when specifying a non-existent binary', function () {
-        return __awaiter(this, void 0, void 0, function* () {
-            const errorMessage = yield new Promise((resolve, reject) => {
-                dc.launchRequest({
-                    verbose: true,
-                    gdb: utils_2.gdbPath,
-                    program: '/does/not/exist',
-                    openGdbConsole: utils_2.openGdbConsole,
-                })
-                    .then(reject)
-                    .catch(resolve);
-            });
-            // When launching a remote test gdbserver generates the error which is not exactly the same
-            // as GDB's error
-            chai_1.expect(errorMessage.message).to.satisfy((msg) => msg.includes('/does/not/exist')
-                && (msg.includes('The system cannot find the path specified')
-                    || msg.includes('No such file or directory')));
-        });
-    });
-    it('works with a space in file names', function () {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield dc.hitBreakpoint({
-                verbose: true,
-                gdb: utils_2.gdbPath,
-                program: emptySpaceProgram,
-                openGdbConsole: utils_2.openGdbConsole,
-            }, {
-                path: emptySpaceSrc,
-                line: 3,
-            });
-        });
-    });
 });
-//# sourceMappingURL=launch.spec.js.map
+//# sourceMappingURL=launchRemote.spec.js.map

@@ -77,11 +77,7 @@ class GDBDebugSession extends vscode_debugadapter_1.LoggingDebugSession {
                 yield this.gdb.sendEnablePrettyPrint();
                 yield mi.sendTargetAttachRequest(this.gdb, { pid: args.processId });
                 this.sendEvent(new vscode_debugadapter_1.OutputEvent(`attached to process ${args.processId}`));
-                if (args.initCommands) {
-                    for (const command of args.initCommands) {
-                        yield this.gdb.sendCommand(command);
-                    }
-                }
+                yield this.gdb.sendCommands(args.initCommands);
                 this.sendEvent(new vscode_debugadapter_1.InitializedEvent());
                 this.sendResponse(response);
             }

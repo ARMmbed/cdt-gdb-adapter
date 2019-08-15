@@ -19,21 +19,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const utils_1 = require("./utils");
-let dc;
-before(utils_1.standardBefore);
-beforeEach(() => __awaiter(this, void 0, void 0, function* () {
-    dc = yield utils_1.standardBeforeEach();
-    yield dc.launchRequest({
-        verbose: true,
-        gdb: utils_1.gdbPath,
-        program: path.join(utils_1.testProgramsDir, 'count'),
-        openGdbConsole: utils_1.openGdbConsole,
-    });
-}));
-afterEach(() => __awaiter(this, void 0, void 0, function* () {
-    yield dc.stop();
-}));
 describe('breakpoints', () => __awaiter(this, void 0, void 0, function* () {
+    let dc;
+    beforeEach(() => __awaiter(this, void 0, void 0, function* () {
+        dc = yield utils_1.standardBeforeEach();
+        yield dc.launchRequest({
+            verbose: true,
+            gdb: utils_1.gdbPath,
+            program: path.join(utils_1.testProgramsDir, 'count'),
+            openGdbConsole: utils_1.openGdbConsole,
+        });
+    }));
+    afterEach(() => __awaiter(this, void 0, void 0, function* () {
+        yield dc.stop();
+    }));
     it('hits a standard breakpoint', () => __awaiter(this, void 0, void 0, function* () {
         yield dc.setBreakpointsRequest({
             source: {

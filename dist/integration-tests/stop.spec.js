@@ -11,15 +11,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const utils_1 = require("./utils");
 const chai_1 = require("chai");
 const path = require("path");
-let dc;
-before(utils_1.standardBefore);
-beforeEach(() => __awaiter(this, void 0, void 0, function* () {
-    dc = yield utils_1.standardBeforeEach();
-}));
-afterEach(() => __awaiter(this, void 0, void 0, function* () {
-    yield dc.stop();
-}));
 describe('stop', () => __awaiter(this, void 0, void 0, function* () {
+    let dc;
+    beforeEach(() => __awaiter(this, void 0, void 0, function* () {
+        dc = yield utils_1.standardBeforeEach();
+    }));
+    afterEach(() => __awaiter(this, void 0, void 0, function* () {
+        yield dc.stop();
+    }));
     it('handles segv', () => __awaiter(this, void 0, void 0, function* () {
         yield dc.launchRequest({
             verbose: true,

@@ -22,39 +22,38 @@ const path = require("path");
 const utils_1 = require("./utils");
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
-let dc;
-let scope;
-const varsCppProgram = path.join(utils_1.testProgramsDir, 'vars_cpp');
-const varsCppSrc = path.join(utils_1.testProgramsDir, 'vars_cpp.cpp');
-const lineTags = {
-    'STOP HERE': 0,
-};
-before(function () {
-    utils_1.standardBefore();
-    utils_1.resolveLineTagLocations(varsCppSrc, lineTags);
-});
-beforeEach(function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        dc = yield utils_1.standardBeforeEach();
-        yield dc.hitBreakpoint({
-            verbose: true,
-            gdb: utils_1.gdbPath,
-            program: varsCppProgram,
-            openGdbConsole: utils_1.openGdbConsole,
-        }, {
-            path: varsCppSrc,
-            line: lineTags['STOP HERE'],
-        });
-        scope = yield utils_1.getScopes(dc);
-        chai_1.expect(scope.scopes.body.scopes.length, 'Unexpected number of scopes returned').to.equal(1);
-    });
-});
-afterEach(function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield dc.stop();
-    });
-});
 describe('Variables CPP Test Suite', function () {
+    let dc;
+    let scope;
+    const varsCppProgram = path.join(utils_1.testProgramsDir, 'vars_cpp');
+    const varsCppSrc = path.join(utils_1.testProgramsDir, 'vars_cpp.cpp');
+    const lineTags = {
+        'STOP HERE': 0,
+    };
+    before(function () {
+        utils_1.resolveLineTagLocations(varsCppSrc, lineTags);
+    });
+    beforeEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            dc = yield utils_1.standardBeforeEach();
+            yield dc.hitBreakpoint({
+                verbose: true,
+                gdb: utils_1.gdbPath,
+                program: varsCppProgram,
+                openGdbConsole: utils_1.openGdbConsole,
+            }, {
+                path: varsCppSrc,
+                line: lineTags['STOP HERE'],
+            });
+            scope = yield utils_1.getScopes(dc);
+            chai_1.expect(scope.scopes.body.scopes.length, 'Unexpected number of scopes returned').to.equal(1);
+        });
+    });
+    afterEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield dc.stop();
+        });
+    });
     // Move the timeout out of the way if the adapter is going to be debugged.
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         this.timeout(9999999);

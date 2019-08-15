@@ -27,10 +27,12 @@ export declare function expectRejection<T>(promise: Promise<T>): Promise<Error>;
 export declare function verifyVariable(variable: DebugProtocol.Variable, expectedName: string, expectedType?: string, expectedValue?: string, hasChildren?: boolean): void;
 export declare function compareVariable(varA: DebugProtocol.Variable, varB: DebugProtocol.Variable, namesMatch: boolean, typesMatch: boolean, valuesMatch: boolean): void;
 export declare const testProgramsDir: string;
-export declare function standardBefore(): Promise<void>;
-export declare function standardBeforeEach(): Promise<CdtDebugClient>;
+export declare function standardBeforeEach(adapter?: string): Promise<CdtDebugClient>;
 export declare const openGdbConsole: boolean;
 export declare const gdbPath: string | undefined;
+export declare const gdbServerPath: string;
+export declare const debugServerPort: number | undefined;
+export declare const defaultAdapter: string;
 export interface LineTags {
     [key: string]: number;
 }

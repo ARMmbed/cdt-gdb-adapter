@@ -11,7 +11,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 function sendBreakInsert(gdb, request) {
     return __awaiter(this, void 0, void 0, function* () {
         // Todo: lots of options
-        const result = yield gdb.sendCommand(`-break-insert "${request.location}"`);
+        const escapedLocation = gdb.standardEscape(request.location);
+        const result = yield gdb.sendCommand(`-break-insert ${escapedLocation}`);
         if (request.condition) {
             yield gdb.sendCommand(`-break-condition ${result.bkpt.number} ${request.condition}`);
         }

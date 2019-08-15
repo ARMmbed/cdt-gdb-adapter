@@ -89,26 +89,26 @@ function compareVariable(varA, varB, namesMatch, typesMatch, valuesMatch) {
 }
 exports.compareVariable = compareVariable;
 exports.testProgramsDir = path.join(__dirname, '..', '..', 'src', 'integration-tests', 'test-programs');
-function standardBefore() {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Build the test program
-        cp.execSync('make', { cwd: exports.testProgramsDir });
-    });
-}
-exports.standardBefore = standardBefore;
-function getAdapterAndArgs() {
-    let args = path.join(__dirname, '..', 'debugAdapter.js');
+// Run make once per mocha execution by having root-level before
+before(function (done) {
+    this.timeout(20000);
+    cp.execSync('make', { cwd: exports.testProgramsDir });
+    done();
+});
+function getAdapterAndArgs(adapter) {
+    const chosenAdapter = adapter !== undefined ? adapter : exports.defaultAdapter;
+    let args = path.join(__dirname, '../../dist', chosenAdapter);
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         args = '--inspect-brk ' + args;
     }
     return args;
 }
-function standardBeforeEach() {
+function standardBeforeEach(adapter) {
     return __awaiter(this, void 0, void 0, function* () {
-        const dc = new debugClient_1.CdtDebugClient('node', getAdapterAndArgs(), 'cppdbg', {
+        const dc = new debugClient_1.CdtDebugClient('node', getAdapterAndArgs(adapter), 'cppdbg', {
             shell: true,
         });
-        yield dc.start();
+        yield dc.start(exports.debugServerPort);
         yield dc.initializeRequest();
         return dc;
     });
@@ -116,12 +116,36 @@ function standardBeforeEach() {
 exports.standardBeforeEach = standardBeforeEach;
 exports.openGdbConsole = process.argv.indexOf('--run-in-terminal') !== -1;
 exports.gdbPath = getGdbPathCli();
+exports.gdbServerPath = getGdbServerPathCli();
+exports.debugServerPort = getDebugServerPortCli();
+exports.defaultAdapter = getDefaultAdapterCli();
 function getGdbPathCli() {
     const keyIndex = process.argv.indexOf('--gdb-path');
     if (keyIndex === -1) {
         return undefined;
     }
     return process.argv[keyIndex + 1];
+}
+function getGdbServerPathCli() {
+    const keyIndex = process.argv.indexOf('--gdbserver-path');
+    if (keyIndex === -1) {
+        return 'gdbserver';
+    }
+    return process.argv[keyIndex + 1];
+}
+function getDebugServerPortCli() {
+    const keyIndex = process.argv.indexOf('--debugserverport');
+    if (keyIndex === -1) {
+        return undefined;
+    }
+    return parseInt(process.argv[keyIndex + 1], 10);
+}
+function getDefaultAdapterCli() {
+    const keyIndex = process.argv.indexOf('--test-remote');
+    if (keyIndex === -1) {
+        return 'debugAdapter.js';
+    }
+    return 'debugTargetAdapter.js';
 }
 /**
  * Find locations of tags in `sourceFile`.

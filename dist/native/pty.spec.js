@@ -25,17 +25,17 @@ const pty_1 = require("../native/pty");
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions no-console no-bitwise
 if (os.platform() !== 'win32') {
-    let master;
-    let slave;
-    afterEach(function () {
-        if (slave) {
-            slave.destroy();
-        }
-        if (master) {
-            master.destroy();
-        }
-    });
     describe('pty creation', function () {
+        let master;
+        let slave;
+        afterEach(function () {
+            if (slave) {
+                slave.destroy();
+            }
+            if (master) {
+                master.destroy();
+            }
+        });
         it('should be able to open a ptmx/pts pair', function () {
             return __awaiter(this, void 0, void 0, function* () {
                 const pty = new pty_1.Pty();

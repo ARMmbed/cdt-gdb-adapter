@@ -13,55 +13,66 @@ import * as path from 'path';
 import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { LaunchRequestArguments, MemoryResponse } from '../GDBDebugSession';
 import { CdtDebugClient } from './debugClient';
-import { expectRejection, gdbPath, openGdbConsole, standardBefore, standardBeforeEach, testProgramsDir } from './utils';
+import { expectRejection, gdbPath, openGdbConsole, standardBeforeEach, testProgramsDir } from './utils';
 
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
-
-let dc: CdtDebugClient;
-let frame: DebugProtocol.StackFrame;
-const memProgram = path.join(testProgramsDir, 'mem');
-const memSrc = path.join(testProgramsDir, 'mem.c');
-
-before(standardBefore);
-
-beforeEach(async function() {
-    dc = await standardBeforeEach();
-
-    await dc.hitBreakpoint({
-        gdb: gdbPath,
-        program: memProgram,
-        openGdbConsole,
-    } as LaunchRequestArguments, {
-        path: memSrc,
-        line: 12,
-    });
-    const threads = await dc.threadsRequest();
-    expect(threads.body.threads.length).to.equal(1);
-    const stack = await dc.stackTraceRequest({ threadId: threads.body.threads[0].id });
-    expect(stack.body.stackFrames.length).to.equal(1);
-    frame = stack.body.stackFrames[0];
-});
-
-afterEach(async function() {
-    await dc.stop();
-});
-
-/**
- * Verify that `resp` contains the bytes `expectedBytes` and the
- * `expectedAddress` start address.
- *
- * `expectedAddress` should be an hexadecimal string, with the leading 0x.
- */
-function verifyMemoryReadResult(resp: MemoryResponse, expectedBytes: string, expectedAddress: number) {
-    expect(resp.body.data).eq(expectedBytes);
-    expect(resp.body.address).match(/^0x[0-9a-fA-F]+$/);
-
-    const actualAddress = parseInt(resp.body.address, 16);
-    expect(actualAddress).eq(expectedAddress);
-}
-
 describe('Memory Test Suite', function() {
+
+    let dc: CdtDebugClient;
+    let frame: DebugProtocol.StackFrame;
+    const memProgram = path.join(testProgramsDir, 'mem');
+    const memSrc = path.join(testProgramsDir, 'mem.c');
+
+    beforeEach(async function() {
+        dc = await standardBeforeEach();
+
+        await dc.hitBreakpoint({
+            gdb: gdbPath,
+            program: memProgram,
+            openGdbConsole,
+        } as LaunchRequestArguments, {
+                path: memSrc,
+                line: 12,
+            });
+        const threads = await dc.threadsRequest();
+        // On windows additional threads can exist to handle signals, therefore find
+        // the real thread & frame running the user code. The other thread will
+        // normally be running code from ntdll or similar.
+        loop_threads:
+        for (const thread of threads.body.threads) {
+            const stack = await dc.stackTraceRequest({ threadId: thread.id });
+            if (stack.body.stackFrames.length >= 1) {
+                for (const f of stack.body.stackFrames) {
+                    if (f.source && f.source.name === 'mem.c') {
+                        frame = f;
+                        break loop_threads;
+                    }
+                }
+            }
+        }
+        // Make sure we found the expected frame
+        expect(frame).not.eq(undefined);
+    });
+
+    afterEach(async function() {
+        await dc.stop();
+    });
+
+    /**
+     * Verify that `resp` contains the bytes `expectedBytes` and the
+     * `expectedAddress` start address.
+     *
+     * `expectedAddress` should be an hexadecimal string, with the leading 0x.
+     */
+    function verifyMemoryReadResult(resp: MemoryResponse, expectedBytes: string, expectedAddress: number) {
+        expect(resp.body.data).eq(expectedBytes);
+        expect(resp.body.address).match(/^0x[0-9a-fA-F]+$/);
+
+        const actualAddress = parseInt(resp.body.address, 16);
+        expect(actualAddress).eq(expectedAddress);
+    }
+
     // Test reading memory using cdt-gdb-adapter's extension request.
     it('can read memory', async function() {
         // Get the address of the array.

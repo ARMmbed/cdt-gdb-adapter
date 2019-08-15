@@ -22,37 +22,36 @@ const path = require("path");
 const utils_1 = require("./utils");
 // Allow non-arrow functions: https://mochajs.org/#arrow-functions
 // tslint:disable:only-arrow-functions
-let dc;
-let scope;
-const evaluateProgram = path.join(utils_1.testProgramsDir, 'evaluate');
-const evaluateSrc = path.join(utils_1.testProgramsDir, 'evaluate.cpp');
-before(utils_1.standardBefore);
-beforeEach(function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Move the timeout out of the way if the adapter is going to be debugged.
-        if (process.env.INSPECT_DEBUG_ADAPTER) {
-            this.timeout(9999999);
-        }
-        dc = yield utils_1.standardBeforeEach();
-        yield dc.hitBreakpoint({
-            verbose: true,
-            gdb: utils_1.gdbPath,
-            program: evaluateProgram,
-            logFile: '/tmp/gdb.log',
-            openGdbConsole: utils_1.openGdbConsole,
-        }, {
-            path: evaluateSrc,
-            line: 2,
-        });
-        scope = yield utils_1.getScopes(dc);
-    });
-});
-afterEach(function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield dc.stop();
-    });
-});
 describe('evaluate request', function () {
+    let dc;
+    let scope;
+    const evaluateProgram = path.join(utils_1.testProgramsDir, 'evaluate');
+    const evaluateSrc = path.join(utils_1.testProgramsDir, 'evaluate.cpp');
+    beforeEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Move the timeout out of the way if the adapter is going to be debugged.
+            if (process.env.INSPECT_DEBUG_ADAPTER) {
+                this.timeout(9999999);
+            }
+            dc = yield utils_1.standardBeforeEach();
+            yield dc.hitBreakpoint({
+                verbose: true,
+                gdb: utils_1.gdbPath,
+                program: evaluateProgram,
+                logFile: '/tmp/gdb.log',
+                openGdbConsole: utils_1.openGdbConsole,
+            }, {
+                path: evaluateSrc,
+                line: 2,
+            });
+            scope = yield utils_1.getScopes(dc);
+        });
+    });
+    afterEach(function () {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield dc.stop();
+        });
+    });
     // Move the timeout out of the way if the adapter is going to be debugged.
     if (process.env.INSPECT_DEBUG_ADAPTER) {
         this.timeout(9999999);
