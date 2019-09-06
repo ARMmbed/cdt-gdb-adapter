@@ -670,7 +670,7 @@ export class GDBDebugSession extends LoggingDebugSession {
                 }
                 break;
             default:
-                this.sendStoppedEvent('generic', parseInt(result['thread-id'], 10));
+                logger.warn('GDB unhandled stop: ' + JSON.stringify(result));
         }
     }
 
@@ -680,10 +680,8 @@ export class GDBDebugSession extends LoggingDebugSession {
                 this.isRunning = true;
                 break;
             case 'stopped':
-                if (this.isRunning) {
-                    this.isRunning = false;
-                    this.handleGDBStopped(resultData);
-                }
+                this.isRunning = false;
+                this.handleGDBStopped(resultData);
                 break;
             default:
                 logger.warn(`GDB unhandled async: ${resultClass}: ${JSON.stringify(resultData)}`);
