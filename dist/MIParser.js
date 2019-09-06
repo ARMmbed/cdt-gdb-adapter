@@ -200,7 +200,7 @@ class MIParser {
         }
         switch (c) {
             case '^':
-                logger_1.logger.verbose('GDB result: ' + this.restOfLine());
+                logger_1.logger.verbose(`GDB result: ${token} ${this.restOfLine()}`);
                 const command = this.commandQueue[token];
                 if (command) {
                     const resultClass = this.handleString();

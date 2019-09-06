@@ -583,7 +583,7 @@ class GDBDebugSession extends vscode_debugadapter_1.LoggingDebugSession {
                 }
                 break;
             default:
-                vscode_debugadapter_1.logger.warn('GDB unhandled stop: ' + JSON.stringify(result));
+                this.sendStoppedEvent('generic', parseInt(result['thread-id'], 10));
         }
     }
     handleGDBAsync(resultClass, resultData) {
@@ -592,8 +592,10 @@ class GDBDebugSession extends vscode_debugadapter_1.LoggingDebugSession {
                 this.isRunning = true;
                 break;
             case 'stopped':
-                this.isRunning = false;
-                this.handleGDBStopped(resultData);
+                if (this.isRunning) {
+                    this.isRunning = false;
+                    this.handleGDBStopped(resultData);
+                }
                 break;
             default:
                 vscode_debugadapter_1.logger.warn(`GDB unhandled async: ${resultClass}: ${JSON.stringify(resultData)}`);
