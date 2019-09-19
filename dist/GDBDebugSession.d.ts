@@ -89,7 +89,7 @@ export declare class GDBDebugSession extends LoggingDebugSession {
      */
     protected memoryRequest(response: MemoryResponse, args: any): Promise<void>;
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse, args: DebugProtocol.DisconnectArguments): Promise<void>;
-    protected sendStoppedEvent(reason: string, threadId: number, exceptionText?: string): void;
+    protected sendStoppedEvent(reason: string, threadId: number, allThreadsStopped?: boolean): void;
     protected handleGDBStopped(result: any): void;
     protected handleGDBAsync(resultClass: string, resultData: any): void;
     protected handleGDBNotify(notifyClass: string, notifyData: any): void;

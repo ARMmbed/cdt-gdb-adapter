@@ -24,6 +24,7 @@ const GDBBackend_1 = require("./GDBBackend");
 const mi = require("./mi");
 const data_1 = require("./mi/data");
 const varMgr = require("./varManager");
+const stoppedEvent_1 = require("./stoppedEvent");
 const arrayRegex = /.*\[[\d]+\].*/;
 const arrayChildRegex = /[\d]+/;
 class GDBDebugSession extends vscode_debugadapter_1.LoggingDebugSession {
@@ -555,35 +556,39 @@ class GDBDebugSession extends vscode_debugadapter_1.LoggingDebugSession {
             }
         });
     }
-    sendStoppedEvent(reason, threadId, exceptionText) {
+    sendStoppedEvent(reason, threadId, allThreadsStopped) {
         // Reset frame handles and variables for new context
         this.frameHandles.reset();
         this.variableHandles.reset();
         // Send the event
-        this.sendEvent(new vscode_debugadapter_1.StoppedEvent(reason, threadId, exceptionText));
+        this.sendEvent(new stoppedEvent_1.StoppedEvent(reason, threadId, allThreadsStopped));
     }
     handleGDBStopped(result) {
+        const getThreadId = (resultData) => parseInt(resultData['thread-id'], 10);
+        const getAllThreadsStopped = (resultData) => {
+            return !!resultData['stopped-threads'] && resultData['stopped-threads'] === 'all';
+        };
         switch (result.reason) {
             case 'exited':
             case 'exited-normally':
                 this.sendEvent(new vscode_debugadapter_1.TerminatedEvent());
                 break;
             case 'breakpoint-hit':
-                this.sendStoppedEvent('breakpoint', parseInt(result['thread-id'], 10));
+                this.sendStoppedEvent('breakpoint', getThreadId(result), getAllThreadsStopped(result));
                 break;
             case 'end-stepping-range':
             case 'function-finished':
-                this.sendStoppedEvent('step', parseInt(result['thread-id'], 10));
+                this.sendStoppedEvent('step', getThreadId(result), getAllThreadsStopped(result));
                 break;
             case 'signal-received':
                 const name = result['signal-name'] || 'signal';
-                this.sendStoppedEvent(name, parseInt(result['thread-id'], 10));
+                this.sendStoppedEvent(name, getThreadId(result), getAllThreadsStopped(result));
                 if (this.waitPaused) {
                     this.waitPaused();
                 }
                 break;
             default:
-                this.sendStoppedEvent('generic', parseInt(result['thread-id'], 10));
+                this.sendStoppedEvent('generic', getThreadId(result), getAllThreadsStopped(result));
         }
     }
     handleGDBAsync(resultClass, resultData) {
